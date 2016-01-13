@@ -1,5 +1,7 @@
 # Concurrent::Iterator
 
+[![Build Status](https://travis-ci.org/jnthn/p6-concurrent-iterator.svg?branch=master)](https://travis-ci.org/jnthn/p6-concurrent-iterator)
+
 A standard Perl 6 `Iterator` should only be consumed from one thread at a time.
 `Concurrent::Iterator` allows any Iterable to be iterated concurrently.
 
