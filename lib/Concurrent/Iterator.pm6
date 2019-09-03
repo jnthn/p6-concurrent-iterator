@@ -1,31 +1,30 @@
 class Concurrent::Iterator does Iterator {
-    has $!target-iterator;
+    has Mu $!target-iterator;
     has $!lock;
-    has int $!reached-end = 0;
     has $!exception;
 
     method new(Iterable:D $target) {
         self.bless(:$target)
     }
 
-    submethod BUILD(:$target) {
-        $!target-iterator = $target.iterator;
-        $!lock = Lock.new;
+    submethod TWEAK(:$target --> Nil) {
+        $!target-iterator := $target.iterator;
+        $!lock := Lock.new;
     }
 
     method pull-one() {
         $!lock.protect: {
-            if $!reached-end {
-                IterationEnd
+            if $!target-iterator {
+                my \pulled = $!target-iterator.pull-one;
+                CATCH { $!exception := $_; $!target-iterator := Mu }
+                $!target-iterator := Mu if pulled =:= IterationEnd;
+                pulled
             }
             elsif $!exception {
                 $!exception.rethrow
             }
             else {
-                my \pulled = $!target-iterator.pull-one;
-                CATCH { $!exception = $_ }
-                $!reached-end = 1 if pulled =:= IterationEnd;
-                pulled
+                IterationEnd
             }
         }
     }
